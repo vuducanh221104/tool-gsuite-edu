@@ -1,0 +1,164 @@
+{
+  "nam2@thienthanhthanedu.click": {
+    "email": "nam2@thienthanhthanedu.click",
+    "backupCodes": [
+      "11295771",
+      "67554154",
+      "24480534",
+      "17445275",
+      "92569924",
+      "38092174",
+      "11144740",
+      "77903110",
+      "08382211",
+      "37842999"
+    ],
+    "retrievedAt": "2025-10-18T14:53:53.568Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "testuser1001@thienthanhthanedu.click": {
+    "email": "testuser1001@thienthanhthanedu.click",
+    "backupCodes": [
+      "13555013",
+      "12416146",
+      "53841536",
+      "01917314",
+      "78291669",
+      "23635564",
+      "76379291",
+      "32807911",
+      "06409832",
+      "04188494"
+    ],
+    "retrievedAt": "2025-10-18T16:48:45.224Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "testuser1002@thienthanhthanedu.click": {
+    "email": "testuser1002@thienthanhthanedu.click",
+    "backupCodes": [
+      "78401430",
+      "66286449",
+      "32101851",
+      "56708856",
+      "48954405",
+      "55765657",
+      "16306298",
+      "10093830",
+      "24950176",
+      "82418443"
+    ],
+    "retrievedAt": "2025-10-18T16:50:00.634Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "nam2432@thienthanhthanedu.click": {
+    "email": "nam2432@thienthanhthanedu.click",
+    "backupCodes": [
+      "56845511",
+      "94468413",
+      "50578647",
+      "88768854",
+      "62112998",
+      "72283059",
+      "31099817",
+      "64799935",
+      "65633302",
+      "42723122"
+    ],
+    "retrievedAt": "2025-10-19T09:20:07.391Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "mongodb-test@thienthanhthanedu.click": {
+    "email": "mongodb-test@thienthanhthanedu.click",
+    "backupCodes": [
+      "31034074",
+      "35040971",
+      "66274888",
+      "10013539",
+      "35031820",
+      "79654983",
+      "23133792",
+      "59625657",
+      "24690884",
+      "64794591"
+    ],
+    "retrievedAt": "2025-10-19T08:56:13.737Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "mongodb-test2@thienthanhthanedu.click": {
+    "email": "mongodb-test2@thienthanhthanedu.click",
+    "backupCodes": [
+      "18119514",
+      "70201426",
+      "35086072",
+      "51063041",
+      "47135683",
+      "26504585",
+      "14907098",
+      "98308844",
+      "05494564",
+      "14265107"
+    ],
+    "retrievedAt": "2025-10-19T08:57:07.851Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "mongodb-test3@thienthanhthanedu.click": {
+    "email": "mongodb-test3@thienthanhthanedu.click",
+    "backupCodes": [
+      "81552187",
+      "06391650",
+      "60862793",
+      "13527711",
+      "01017639",
+      "69874830",
+      "98464817",
+      "37699161",
+      "75283307",
+      "98419981"
+    ],
+    "retrievedAt": "2025-10-19T08:58:00.355Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "test-reference@thienthanhthanedu.click": {
+    "email": "test-reference@thienthanhthanedu.click",
+    "backupCodes": [
+      "66200889",
+      "36509907",
+      "64707714",
+      "47576019",
+      "67253508",
+      "44604654",
+      "11598458",
+      "78700099",
+      "48977038",
+      "98566986"
+    ],
+    "retrievedAt": "2025-10-19T09:28:27.362Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "nam243122@thienthanhthanedu.click": {
+    "email": "nam243122@thienthanhthanedu.click",
+    "backupCodes": [
+      "96500070",
+      "13694055",
+      "44448398",
+      "23302232",
+      "42175093",
+      "45006037",
+      "74734462",
+      "38717932",
+      "52036829",
+      "28667815"
+    ],
+    "retrievedAt": "2025-10-19T09:30:41.089Z",
+    "codesCount": 10,
+    "status": "active"
+  }
+}
