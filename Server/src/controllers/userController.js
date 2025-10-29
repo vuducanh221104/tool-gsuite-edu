@@ -59,7 +59,36 @@ async function listAll(req, res, next) {
   }
 }
 
+async function bulkCreate(req, res, next) {
+  try {
+    const { users } = req.body;
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ error: 'users must be a non-empty array' });
+    }
+    
+    const results = await userService.bulkCreateUsers(users);
+    res.status(201).json({ results });
+  } catch (err) {
+    handleError(err, res, next);
+  }
+}
+
+async function exportToExcel(req, res, next) {
+  try {
+    const { source = 'google' } = req.query;
+    const buffer = await userService.exportUsersToExcel({ source });
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=users-export-${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (err) {
+    handleError(err, res, next);
+  }
+}
+
 module.exports.list = list;
 module.exports.listAll = listAll;
+module.exports.bulkCreate = bulkCreate;
+module.exports.exportToExcel = exportToExcel;
 
 

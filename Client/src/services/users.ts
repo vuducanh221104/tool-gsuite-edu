@@ -38,4 +38,40 @@ export async function deleteUser(userKey: string) {
   return res.data as { message: string };
 }
 
+export interface BulkCreateResult {
+  success: boolean;
+  email: string;
+  password?: string;
+  backupCodes?: string[];
+  error?: string;
+  user?: DirectoryUser;
+}
+
+export async function bulkCreateUsers(users: CreateUserPayload[]) {
+  const res = await api.post('/api/users/bulk', { users });
+  return res.data as { results: BulkCreateResult[] };
+}
+
+export async function exportUsersToExcel(source: 'google' | 'mongodb' = 'google') {
+  const res = await api.get('/api/users/export', {
+    params: { source },
+    responseType: 'blob'
+  });
+  
+  // Create download link
+  const blob = new Blob([res.data], { 
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+  });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `users-export-${Date.now()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+  
+  return { success: true };
+}
+
 

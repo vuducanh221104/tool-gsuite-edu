@@ -3,82 +3,73 @@ import React from 'react';
 import { Checkbox } from '@Client/components/ui/checkbox';
 import { Badge } from '@Client/components/ui/badge';
 import { Button } from '@Client/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@Client/components/ui/select';
 import { Table as STable } from '@Client/components/ui/table';
 import type { DirectoryUser } from '@Client/types/users';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@Client/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@Client/components/ui/dropdown-menu';
 import { DropdownMenuItem } from '@Client/components/ui/dropdown-menu';
 import { Skeleton } from '@Client/components/ui/skeleton';
-import { GripVertical, MoreVertical, CheckCircle2, Loader2 } from 'lucide-react';
+import { MoreVertical, CheckCircle2, XCircle, Shield, User } from 'lucide-react';
 
 type Props = {
   users: DirectoryUser[];
   loading?: boolean;
   onDelete?: (email: string) => void;
+  onEdit?: (user: DirectoryUser) => void;
+  selectedUsers?: string[];
+  onSelectionChange?: (emails: string[]) => void;
 };
 
-export function AllUsersTable({ users, loading, onDelete }: Props) {
-  const [selected, setSelected] = React.useState<string[]>([]);
-  const [visible, setVisible] = React.useState<{ type: boolean; status: boolean; target: boolean; limit: boolean; reviewer: boolean }>(() => {
-    if (typeof window === 'undefined') return { type: true, status: true, target: true, limit: true, reviewer: true };
-    try {
-      const raw = localStorage.getItem('allUsersTable.columns');
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return { type: true, status: true, target: true, limit: true, reviewer: true };
-  });
+export function AllUsersTable({ users, loading, onDelete, onEdit, selectedUsers = [], onSelectionChange }: Props) {
+  const [selected, setSelected] = React.useState<string[]>(selectedUsers);
 
   React.useEffect(() => {
-    try { localStorage.setItem('allUsersTable.columns', JSON.stringify(visible)); } catch {}
-  }, [visible]);
+    setSelected(selectedUsers);
+  }, [selectedUsers]);
 
   const toggleAll = (checked: boolean | string) => {
-    if (checked) setSelected(users.map(u => u.primaryEmail));
-    else setSelected([]);
+    const newSelection = checked ? users.map(u => u.primaryEmail) : [];
+    setSelected(newSelection);
+    onSelectionChange?.(newSelection);
   };
 
   const toggleOne = (email: string, checked: boolean | string) => {
-    setSelected(prev => checked ? Array.from(new Set([...prev, email])) : prev.filter(e => e !== email));
+    const newSelection = checked 
+      ? Array.from(new Set([...selected, email])) 
+      : selected.filter(e => e !== email);
+    setSelected(newSelection);
+    onSelectionChange?.(newSelection);
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Checkbox checked={selected.length > 0 && selected.length === users.length} onCheckedChange={toggleAll} />
-          <span className="text-sm text-muted-foreground">{selected.length} selected</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="inline-flex items-center gap-2">Customize Columns</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem checked={visible.type} onCheckedChange={(v) => setVisible((s) => ({ ...s, type: !!v }))}>Type</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={visible.status} onCheckedChange={(v) => setVisible((s) => ({ ...s, status: !!v }))}>Status</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={visible.target} onCheckedChange={(v) => setVisible((s) => ({ ...s, target: !!v }))}>Target</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={visible.limit} onCheckedChange={(v) => setVisible((s) => ({ ...s, limit: !!v }))}>Limit</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={visible.reviewer} onCheckedChange={(v) => setVisible((s) => ({ ...s, reviewer: !!v }))}>Reviewer</DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button size="sm">Add Section</Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-3">
+          <Checkbox 
+            checked={selected.length > 0 && selected.length === users.length} 
+            onCheckedChange={toggleAll} 
+          />
+          <span className="text-sm font-medium text-muted-foreground">
+            {selected.length} of {users.length} selected
+          </span>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto rounded-lg border shadow-sm">
         <STable>
           <thead className="sticky top-0 z-10 bg-background">
             <tr>
-              <th className="w-8"></th>
-              <th className="w-8"><Checkbox checked={selected.length > 0 && selected.length === users.length} onCheckedChange={toggleAll} /></th>
-              <th className="text-left">Header</th>
-              {visible.type && <th className="text-left">Section Type</th>}
-              {visible.status && <th className="text-left">Status</th>}
-              {visible.target && <th className="text-left">Target</th>}
-              {visible.limit && <th className="text-left">Limit</th>}
-              {visible.reviewer && <th className="text-left">Reviewer</th>}
+              <th className="w-8">
+                <Checkbox 
+                  checked={selected.length > 0 && selected.length === users.length} 
+                  onCheckedChange={toggleAll} 
+                />
+              </th>
+              <th className="text-left">Email</th>
+              <th className="text-left">Name</th>
+              <th className="text-left">Org Unit</th>
+              <th className="text-left">Role</th>
+              <th className="text-left">Status</th>
+              <th className="text-left">Created</th>
               <th className="w-10"></th>
             </tr>
           </thead>
@@ -86,59 +77,99 @@ export function AllUsersTable({ users, loading, onDelete }: Props) {
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i}>
-                  <td className="pl-2"><Skeleton className="h-4 w-4" /></td>
                   <td><Skeleton className="h-4 w-4" /></td>
-                  <td><Skeleton className="h-4 w-[280px]" /></td>
-                  {visible.type && <td><Skeleton className="h-4 w-[120px]" /></td>}
-                  {visible.status && <td><Skeleton className="h-4 w-[90px]" /></td>}
-                  {visible.target && <td><Skeleton className="h-4 w-[40px]" /></td>}
-                  {visible.limit && <td><Skeleton className="h-4 w-[40px]" /></td>}
-                  {visible.reviewer && <td><Skeleton className="h-4 w-[160px]" /></td>}
+                  <td><Skeleton className="h-4 w-[220px]" /></td>
+                  <td><Skeleton className="h-4 w-[180px]" /></td>
+                  <td><Skeleton className="h-4 w-[100px]" /></td>
+                  <td><Skeleton className="h-4 w-[80px]" /></td>
+                  <td><Skeleton className="h-4 w-[80px]" /></td>
+                  <td><Skeleton className="h-4 w-[120px]" /></td>
                   <td className="text-right pr-3"><Skeleton className="h-4 w-4 ml-auto" /></td>
                 </tr>
               ))
             ) : users.length === 0 ? (
-              <tr><td colSpan={8} className="py-6 text-center text-sm text-muted-foreground">No users</td></tr>
+              <tr>
+                <td colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+                  No users found
+                </td>
+              </tr>
             ) : (
               users.map((u) => (
                 <tr key={u.id ?? u.primaryEmail} className="hover:bg-muted/40">
-                  <td className="pl-2 text-muted-foreground"><GripVertical className="h-4 w-4" /></td>
-                  <td><Checkbox checked={selected.includes(u.primaryEmail)} onCheckedChange={(v) => toggleOne(u.primaryEmail, v)} /></td>
-                  <td>{u.name?.familyName ? `${u.name.familyName}, ${u.name.givenName}` : u.primaryEmail}</td>
-                  {visible.type && <td><Badge variant="secondary">Narrative</Badge></td>}
-                  {visible.status && (
-                    <td>
-                      <Badge className="inline-flex items-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Done
+                  <td>
+                    <Checkbox 
+                      checked={selected.includes(u.primaryEmail)} 
+                      onCheckedChange={(v) => toggleOne(u.primaryEmail, v)} 
+                    />
+                  </td>
+                  <td className="font-mono text-sm">{u.primaryEmail}</td>
+                  <td>
+                    {u.name?.givenName || u.name?.familyName 
+                      ? `${u.name?.givenName ?? ''} ${u.name?.familyName ?? ''}`.trim()
+                      : '—'
+                    }
+                  </td>
+                  <td>
+                    <span className="text-sm text-muted-foreground">
+                      {u.orgUnitPath || '/'}
+                    </span>
+                  </td>
+                  <td>
+                    {u.isAdmin ? (
+                      <Badge variant="default" className="inline-flex items-center gap-1">
+                        <Shield className="h-3 w-3" /> Admin
                       </Badge>
-                    </td>
-                  )}
-                  {visible.target && <td>—</td>}
-                  {visible.limit && <td>—</td>}
-                  {visible.reviewer && (
-                    <td>
-                      <Select>
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue placeholder="Assign reviewer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Unassigned</SelectItem>
-                          <SelectItem value="r1">Reviewer 1</SelectItem>
-                          <SelectItem value="r2">Reviewer 2</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                  )}
+                    ) : (
+                      <Badge variant="secondary" className="inline-flex items-center gap-1">
+                        <User className="h-3 w-3" /> User
+                      </Badge>
+                    )}
+                  </td>
+                  <td>
+                    {u.suspended ? (
+                      <Badge variant="destructive" className="inline-flex items-center gap-1">
+                        <XCircle className="h-3 w-3" /> Suspended
+                      </Badge>
+                    ) : (
+                      <Badge variant="default" className="inline-flex items-center gap-1 bg-emerald-600">
+                        <CheckCircle2 className="h-3 w-3" /> Active
+                      </Badge>
+                    )}
+                  </td>
+                  <td>
+                    <span className="text-sm text-muted-foreground">
+                      {u.creationTime ? new Date(u.creationTime).toLocaleDateString() : '—'}
+                    </span>
+                  </td>
                   <td className="text-right pr-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => window.alert('View user')}>View</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.alert('Edit user')}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit?.(u)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            navigator.clipboard.writeText(u.primaryEmail);
+                          }}
+                        >
+                          Copy Email
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => onDelete?.(u.primaryEmail)}>Delete</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive" 
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete user "${u.primaryEmail}"?\n\nThis action cannot be undone!`)) {
+                              onDelete?.(u.primaryEmail);
+                            }
+                          }}
+                        >
+                          Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -149,21 +180,14 @@ export function AllUsersTable({ users, loading, onDelete }: Props) {
         </STable>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <div>0 of {users.length} row(s) selected.</div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">Rows per page <Select defaultValue="10"><SelectTrigger className="w-[72px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">10</SelectItem><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem></SelectContent></Select></div>
-          <div>Page 1 of 1</div>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon">«</Button>
-            <Button variant="outline" size="icon">‹</Button>
-            <Button variant="outline" size="icon">›</Button>
-            <Button variant="outline" size="icon">»</Button>
-          </div>
+      <div className="flex items-center justify-between py-3 text-sm text-muted-foreground border-t bg-muted/30 px-4 rounded-b-lg">
+        <div className="font-medium">
+          {selected.length} of {users.length} row(s) selected
+        </div>
+        <div className="text-sm font-medium">
+          Total: {users.length} user{users.length !== 1 ? 's' : ''}
         </div>
       </div>
     </div>
   );
 }
-
-

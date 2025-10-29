@@ -250,8 +250,39 @@ async function deleteUser(userKey) {
     e.status = 400;
     throw e;
   }
+  
   const admin = createAdminDirectoryClient();
-  await admin.users.delete({ userKey });
+  
+  try {
+    // Delete from Google Workspace
+    await admin.users.delete({ userKey });
+    console.log(`✅ User deleted from Google: ${userKey}`);
+  } catch (error) {
+    // If user not found in Google, that's ok, might already be deleted
+    if (error.code === 404 || error.message?.includes('notFound') || error.message?.includes('Resource Not Found')) {
+      console.log(`⚠️ User not found in Google (might be already deleted): ${userKey}`);
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
+  
+  // Also delete from MongoDB if exists
+  try {
+    const deletedUser = await User.findOneAndDelete({ primaryEmail: userKey.toLowerCase() });
+    if (deletedUser) {
+      console.log(`✅ User deleted from MongoDB: ${userKey}`);
+      
+      // Also delete associated backup codes
+      if (deletedUser.backupCodes) {
+        await BackupCodes.findByIdAndDelete(deletedUser.backupCodes);
+        console.log(`✅ Backup codes deleted for: ${userKey}`);
+      }
+    }
+  } catch (mongoError) {
+    console.error(`❌ Error deleting user from MongoDB: ${mongoError.message}`);
+    // Don't throw, just log
+  }
 }
 
 // MongoDB methods
@@ -358,7 +389,126 @@ async function listAllUsers(options = {}) {
   return all;
 }
 
+// Bulk create users
+async function bulkCreateUsers(usersData) {
+  const results = [];
+  
+  for (const userData of usersData) {
+    try {
+      const user = await createUser(userData);
+      results.push({
+        success: true,
+        email: userData.email,
+        user,
+        password: userData.password,
+        backupCodes: user.backupCodes || [],
+      });
+    } catch (error) {
+      results.push({
+        success: false,
+        email: userData.email,
+        error: error.message,
+      });
+    }
+  }
+  
+  return results;
+}
+
+// Export users to Excel
+async function exportUsersToExcel(options = {}) {
+  const xlsx = require('xlsx');
+  const { source = 'google' } = options;
+  
+  let users = [];
+  
+  if (source === 'mongodb') {
+    // Get from MongoDB
+    const result = await getUsersFromMongoDB({ limit: 10000 });
+    users = result.users;
+  } else {
+    // Get from Google
+    users = await listAllUsers();
+  }
+  
+  // Prepare data for Excel with backup codes
+  const excelData = [];
+  
+  for (const u of users) {
+    const row = {
+      'Email': u.primaryEmail,
+      'Created Time': u.creationTime ? new Date(u.creationTime).toLocaleString('vi-VN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }) : '',
+      'Backup Codes': '',
+      'Backup Codes Count': 0,
+    };
+    
+    // Try to get backup codes from MongoDB
+    try {
+      let backupCodesDoc = null;
+      
+      if (source === 'mongodb' && u.backupCodes) {
+        // From MongoDB reference
+        backupCodesDoc = await BackupCodes.findById(u.backupCodes).lean();
+      } else {
+        // Try to find by email
+        backupCodesDoc = await BackupCodes.findByUserEmail(u.primaryEmail);
+      }
+      
+      if (backupCodesDoc && backupCodesDoc.backupCodes && backupCodesDoc.backupCodes.length > 0) {
+        // Extract only non-used codes
+        const activeCodes = backupCodesDoc.backupCodes
+          .filter(bc => !bc.used)
+          .map(bc => bc.code);
+        
+        if (activeCodes.length > 0) {
+          row['Backup Codes'] = activeCodes.join(', ');
+          row['Backup Codes Count'] = activeCodes.length;
+        } else {
+          // Show all codes (including used) if no active codes
+          const allCodes = backupCodesDoc.backupCodes.map(bc => bc.code);
+          row['Backup Codes'] = allCodes.join(', ') + ' (All Used)';
+          row['Backup Codes Count'] = `0/${allCodes.length}`;
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching backup codes for ${u.primaryEmail}:`, error.message);
+    }
+    
+    excelData.push(row);
+  }
+  
+  // Create workbook
+  const wb = xlsx.utils.book_new();
+  const ws = xlsx.utils.json_to_sheet(excelData);
+  
+  // Auto-size columns
+  const maxWidth = 50;
+  const colWidths = Object.keys(excelData[0] || {}).map(key => {
+    const maxLen = Math.max(
+      key.length,
+      ...excelData.map(row => String(row[key] || '').length)
+    );
+    return { wch: Math.min(maxLen + 2, maxWidth) };
+  });
+  ws['!cols'] = colWidths;
+  
+  xlsx.utils.book_append_sheet(wb, ws, 'Users');
+  
+  // Generate buffer
+  const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  return buffer;
+}
+
 module.exports.listUsers = listUsers;
 module.exports.listAllUsers = listAllUsers;
+module.exports.bulkCreateUsers = bulkCreateUsers;
+module.exports.exportUsersToExcel = exportUsersToExcel;
 
 
