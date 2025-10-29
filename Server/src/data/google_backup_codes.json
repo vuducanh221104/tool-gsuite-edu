@@ -214,5 +214,41 @@
     "retrievedAt": "2025-10-29T10:54:08.544Z",
     "codesCount": 10,
     "status": "active"
+  },
+  "user1@thienthanhthanedu.click": {
+    "email": "user1@thienthanhthanedu.click",
+    "backupCodes": [
+      "27452233",
+      "99763914",
+      "64887802",
+      "35935961",
+      "50992375",
+      "10108662",
+      "81026415",
+      "46770429",
+      "37932581",
+      "44105091"
+    ],
+    "retrievedAt": "2025-10-29T11:21:31.994Z",
+    "codesCount": 10,
+    "status": "active"
+  },
+  "user2@thienthanhthanedu.click": {
+    "email": "user2@thienthanhthanedu.click",
+    "backupCodes": [
+      "60901287",
+      "41236033",
+      "36624948",
+      "87906085",
+      "23898948",
+      "29121490",
+      "10533654",
+      "07177160",
+      "57780811",
+      "09630000"
+    ],
+    "retrievedAt": "2025-10-29T11:21:36.844Z",
+    "codesCount": 10,
+    "status": "active"
   }
 }

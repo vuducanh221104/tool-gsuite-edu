@@ -7,12 +7,6 @@
 6 silly config load:file:C:\Users\dev-tra\AppData\Roaming\npm\etc\npmrc
 7 verbose title npm start
 8 verbose argv "start"
-9 verbose logfile logs-max:10 dir:C:\CODE PROJECT\Tool Make\tool-gsuite-edu\Server\.npm-cache\_logs\2025-10-29T11_05_38_881Z-
-10 verbose logfile C:\CODE PROJECT\Tool Make\tool-gsuite-edu\Server\.npm-cache\_logs\2025-10-29T11_05_38_881Z-debug-0.log
+9 verbose logfile logs-max:10 dir:C:\CODE PROJECT\Tool Make\tool-gsuite-edu\Server\.npm-cache\_logs\2025-10-29T11_16_51_841Z-
+10 verbose logfile C:\CODE PROJECT\Tool Make\tool-gsuite-edu\Server\.npm-cache\_logs\2025-10-29T11_16_51_841Z-debug-0.log
 11 silly logfile done cleaning log files
-12 verbose cwd C:\CODE PROJECT\Tool Make\tool-gsuite-edu\Server
-13 verbose os Windows_NT 10.0.26100
-14 verbose node v22.14.0
-15 verbose npm  v11.4.0
-16 verbose exit 1
-17 verbose code 1
