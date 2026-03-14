@@ -5,6 +5,7 @@ import { Button } from '@Client/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@Client/components/ui/card';
 import { Input } from '@Client/components/ui/input';
 import { Badge } from '@Client/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@Client/components/ui/select';
 import { Sidebar } from '@Client/components/dashboard/Sidebar';
 import { MetricCard } from '@Client/components/dashboard/MetricCard';
 import { ModeToggle } from '@Client/components/theme/ModeToggle';
@@ -21,8 +22,10 @@ export default function BackupCodesPage() {
     activeCodes,
     activeUser,
     securityStatus,
+    availableEmails,
     metrics,
     fetchSavedCodes,
+    fetchAvailableEmails,
     loadLiveCodes,
     generateCodes,
     invalidateCodes,
@@ -33,7 +36,8 @@ export default function BackupCodesPage() {
 
   React.useEffect(() => {
     fetchSavedCodes();
-  }, [fetchSavedCodes]);
+    fetchAvailableEmails();
+  }, [fetchAvailableEmails, fetchSavedCodes]);
 
   const filteredRows = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -92,7 +96,27 @@ export default function BackupCodesPage() {
             <CardTitle className="text-xl">Manage by User</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-3">
+            <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_1.8fr_auto_auto_auto] gap-3">
+              <Select
+                value={userKey || 'manual'}
+                onValueChange={(value) => {
+                  if (value === 'manual') return;
+                  setUserKey(value);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Quick select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual input</SelectItem>
+                  {availableEmails.map((email) => (
+                    <SelectItem key={email} value={email}>
+                      {email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Input
                 value={userKey}
                 onChange={(event) => setUserKey(event.target.value)}

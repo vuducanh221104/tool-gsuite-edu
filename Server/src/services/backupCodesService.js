@@ -46,6 +46,37 @@ class BackupCodesService {
   }
 
   /**
+   * List all current user emails in Google Workspace directory
+   * @returns {Promise<Set<string>>} Set of lowercase user emails
+   */
+  async listCurrentUserEmails() {
+    const admin = createAdminDirectoryClient();
+    const emailSet = new Set();
+    let pageToken;
+
+    do {
+      const response = await admin.users.list({
+        customer: 'my_customer',
+        maxResults: 500,
+        pageToken,
+        projection: 'basic',
+        fields: 'nextPageToken,users(primaryEmail)',
+      });
+
+      const users = response.data.users || [];
+      for (const user of users) {
+        if (user.primaryEmail) {
+          emailSet.add(String(user.primaryEmail).toLowerCase());
+        }
+      }
+
+      pageToken = response.data.nextPageToken;
+    } while (pageToken);
+
+    return emailSet;
+  }
+
+  /**
    * Ensure data directory exists
    */
   ensureDataDirectory() {
@@ -338,10 +369,34 @@ class BackupCodesService {
 
   /**
    * Get all saved backup codes from JSON file
+   * By default, stale users (already deleted in Workspace) are excluded.
+   * @param {Object} options
+   * @param {boolean} options.includeStale - Include stale records from JSON file
    * @returns {Object} All backup codes data
    */
-  getAllSavedBackupCodes() {
-    return this.loadBackupCodes();
+  async getAllSavedBackupCodes(options = {}) {
+    const { includeStale = false } = options;
+    const data = this.loadBackupCodes();
+
+    if (includeStale) {
+      return data;
+    }
+
+    try {
+      const currentEmails = await this.listCurrentUserEmails();
+      const filtered = {};
+
+      for (const [email, item] of Object.entries(data)) {
+        if (currentEmails.has(String(email).toLowerCase())) {
+          filtered[email] = item;
+        }
+      }
+
+      return filtered;
+    } catch (error) {
+      console.error('Error filtering stale backup codes, fallback to raw JSON data:', error.message);
+      return data;
+    }
   }
 
   /**

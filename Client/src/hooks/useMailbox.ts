@@ -52,7 +52,11 @@ export function useMailbox() {
   }, [availableEmails]);
 
   const loadMessages = useCallback(
-    async (options?: { pageToken?: string; keepHistory?: boolean; nextTokenForHistory?: string | null }) => {
+    async (options?: {
+      pageToken?: string;
+      historyAction?: 'reset' | 'append' | 'preserve';
+      historyToken?: string | null;
+    }) => {
       const normalizedEmail = userEmail.trim();
       const bulkTargets = selectedBulkEmails;
 
@@ -109,9 +113,15 @@ export function useMailbox() {
         setResultSizeEstimate(data?.resultSizeEstimate || 0);
         setSelectedMessage(null);
 
-        if (options?.keepHistory && options.nextTokenForHistory) {
-          setTokenHistory((prev) => [...prev, options.nextTokenForHistory]);
-        } else if (!options?.keepHistory) {
+        const historyToken = options?.historyToken;
+        if (options?.historyAction === 'append' && historyToken) {
+          setTokenHistory((prev) => {
+            if (prev[prev.length - 1] === historyToken) {
+              return prev;
+            }
+            return [...prev, historyToken];
+          });
+        } else if (options?.historyAction !== 'preserve') {
           setTokenHistory([]);
         }
       } catch (error) {
@@ -143,7 +153,11 @@ export function useMailbox() {
 
   const goToNextPage = useCallback(async () => {
     if (!nextPageToken || isBulkMode) return;
-    await loadMessages({ pageToken: nextPageToken, keepHistory: true, nextTokenForHistory: nextPageToken });
+    await loadMessages({
+      pageToken: nextPageToken,
+      historyAction: 'append',
+      historyToken: nextPageToken,
+    });
   }, [isBulkMode, loadMessages, nextPageToken]);
 
   const goToPreviousPage = useCallback(async () => {
@@ -157,10 +171,8 @@ export function useMailbox() {
 
     await loadMessages({
       pageToken: previousToken,
-      keepHistory: false,
+      historyAction: 'preserve',
     });
-
-    setTokenHistory(previousHistory);
   }, [isBulkMode, loadMessages, tokenHistory]);
 
   return {

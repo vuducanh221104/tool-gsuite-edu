@@ -7,6 +7,7 @@ import {
   invalidateVerificationCodes,
   listVerificationCodes,
 } from '@Client/services/backupCodes';
+import { listUsers } from '@Client/services/users';
 import { parseApiError } from '@Client/lib/utils';
 import type { SavedBackupCodesMap, UserSecurityStatus } from '@Client/types/backupCodes';
 
@@ -23,6 +24,7 @@ export function useBackupCodes() {
   const [activeCodes, setActiveCodes] = useState<string[]>([]);
   const [securityStatus, setSecurityStatus] = useState<UserSecurityStatus | null>(null);
   const [activeUser, setActiveUser] = useState('');
+  const [availableEmails, setAvailableEmails] = useState<string[]>([]);
 
   const fetchSavedCodes = useCallback(async () => {
     setLoading(true);
@@ -33,6 +35,19 @@ export function useBackupCodes() {
       toast.error(parseApiError(error) || 'Failed to load saved backup codes');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchAvailableEmails = useCallback(async () => {
+    try {
+      const response = await listUsers({ maxResults: 500, orderBy: 'email' });
+      const emails = (response.users || [])
+        .map((user) => user.primaryEmail)
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      setAvailableEmails(emails);
+    } catch (error) {
+      toast.error(parseApiError(error) || 'Failed to load available user emails');
     }
   }, []);
 
@@ -142,8 +157,10 @@ export function useBackupCodes() {
     activeCodes,
     activeUser,
     securityStatus,
+    availableEmails,
     metrics,
     fetchSavedCodes,
+    fetchAvailableEmails,
     loadLiveCodes,
     generateCodes,
     invalidateCodes,

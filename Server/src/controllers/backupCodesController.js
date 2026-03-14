@@ -138,11 +138,14 @@ class BackupCodesController {
    */
   async getAllSavedCodes(req, res) {
     try {
-      const result = backupCodesService.getAllSavedBackupCodes();
+      const includeStale = String(req.query.includeStale || '').toLowerCase() === 'true';
+      const result = await backupCodesService.getAllSavedBackupCodes({ includeStale });
       res.json({
         success: true,
         data: result,
-        message: 'All saved backup codes retrieved successfully'
+        message: includeStale
+          ? 'All saved backup codes retrieved successfully (including stale records)'
+          : 'Saved backup codes retrieved successfully (stale records excluded)'
       });
     } catch (error) {
       console.error('Controller error in getAllSavedCodes:', error);
