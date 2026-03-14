@@ -6,6 +6,12 @@ const backupCodesController = require('../controllers/backupCodesController');
  * Routes for managing Google Workspace backup verification codes
  */
 
+// GET /api/backup-codes/saved - Get all saved backup codes from JSON file
+router.get('/saved', backupCodesController.getAllSavedCodes);
+
+// GET /api/backup-codes/saved/:userKey - Get saved backup codes for specific user
+router.get('/saved/:userKey', backupCodesController.getSavedCodes);
+
 // GET /api/backup-codes/:userKey - List all active backup verification codes
 router.get('/:userKey', backupCodesController.listCodes);
 
@@ -17,11 +23,5 @@ router.post('/:userKey/invalidate', backupCodesController.invalidateCodes);
 
 // GET /api/backup-codes/:userKey/status - Get user's 2-step verification status
 router.get('/:userKey/status', backupCodesController.getUserStatus);
-
-// GET /api/backup-codes/saved - Get all saved backup codes from JSON file
-router.get('/saved', backupCodesController.getAllSavedCodes);
-
-// GET /api/backup-codes/saved/:userKey - Get saved backup codes for specific user
-router.get('/saved/:userKey', backupCodesController.getSavedCodes);
 
 module.exports = router;

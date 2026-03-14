@@ -1,9 +1,10 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import { Button } from '@Client/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@Client/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@Client/components/ui/dialog';
-import { Plus, Download, Upload } from 'lucide-react';
+import { Plus, Download, Upload, KeyRound, Mail } from 'lucide-react';
 import { Sidebar } from '@Client/components/dashboard/Sidebar';
 import { MetricCard } from '@Client/components/dashboard/MetricCard';
 import { AreaChartShadcn } from '@Client/components/ui/chart';
@@ -53,6 +54,18 @@ export default function Dashboard() {
           <h1 className="text-2xl font-semibold">Users Management</h1>
           <div className="flex items-center gap-2">
             <ModeToggle />
+            <Button asChild variant="outline" className="inline-flex items-center gap-2">
+              <Link href="/backup-codes">
+                <KeyRound className="w-4 h-4" />
+                Backup Codes
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="inline-flex items-center gap-2">
+              <Link href="/mailbox">
+                <Mail className="w-4 h-4" />
+                Mailbox
+              </Link>
+            </Button>
             <Button 
               onClick={handleExport} 
               variant="outline" 

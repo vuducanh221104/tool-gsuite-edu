@@ -255,7 +255,19 @@ class BackupCodesService {
         }
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data = {};
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          return {
+            success: false,
+            error: 'Invalid JSON response from Google API',
+            details: { responseText, status: response.status }
+          };
+        }
+      }
       
       if (response.ok) {
         // Update JSON file to mark codes as invalidated

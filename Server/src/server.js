@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const usersRouter = require('./routes/users.routes');
 const backupCodesRouter = require('./routes/backupCodes.routes');
 const mongodbRouter = require('./routes/mongodb.routes');
+const mailboxRouter = require('./routes/mailbox.routes');
 const { createAdminDirectoryClient } = require('./lib/googleAuth');
 const { connectToMongoDB, testMongoDBConnection } = require('./lib/mongodb');
 
@@ -59,6 +60,7 @@ app.get('/health/admin', async (req, res, next) => {
 app.use('/api/users', usersRouter);
 app.use('/api/backup-codes', backupCodesRouter);
 app.use('/api/mongodb', mongodbRouter);
+app.use('/api/mailbox', mailboxRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

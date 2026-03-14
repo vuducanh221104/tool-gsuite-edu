@@ -39,17 +39,12 @@ function loadGoogleServiceAccountCredentials() {
   return { clientEmail, privateKeyRaw };
 }
 
-/**
- * Create an authorized Google Admin SDK client using a Service Account
- * with Domain-Wide Delegation to impersonate a Workspace admin user.
- */
-function createAdminDirectoryClient() {
+function createGoogleJwtClient({ scopes, subject } = {}) {
   const { clientEmail, privateKeyRaw } = loadGoogleServiceAccountCredentials();
 
   const requiredNow = [
     ['GOOGLE_CLIENT_EMAIL', clientEmail],
     ['GOOGLE_PRIVATE_KEY', privateKeyRaw],
-    ['GOOGLE_IMPERSONATE_SUBJECT', process.env.GOOGLE_IMPERSONATE_SUBJECT],
   ];
 
   for (const [name, value] of requiredNow) {
@@ -60,14 +55,29 @@ function createAdminDirectoryClient() {
 
   const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
 
-  const auth = new google.auth.JWT({
+  return new google.auth.JWT({
     email: clientEmail,
     key: privateKey,
-    scopes: [
-      'https://www.googleapis.com/auth/admin.directory.user',
-    ],
+    scopes: scopes || ['https://www.googleapis.com/auth/admin.directory.user'],
+    subject: subject || process.env.GOOGLE_IMPERSONATE_SUBJECT,
+  });
+}
+
+/**
+ * Create an authorized Google Admin SDK client using a Service Account
+ * with Domain-Wide Delegation to impersonate a Workspace admin user.
+ */
+function createAdminDirectoryClient() {
+  if (!process.env.GOOGLE_IMPERSONATE_SUBJECT) {
+    throw new Error('Missing required env var: GOOGLE_IMPERSONATE_SUBJECT');
+  }
+
+  const auth = createGoogleJwtClient({
+    scopes: ['https://www.googleapis.com/auth/admin.directory.user'],
     subject: process.env.GOOGLE_IMPERSONATE_SUBJECT,
   });
+
+  const { clientEmail } = loadGoogleServiceAccountCredentials();
 
   // Debug log: which identity we are using (no secrets)
   if (process.env.NODE_ENV !== 'production') {
@@ -79,6 +89,6 @@ function createAdminDirectoryClient() {
   return admin;
 }
 
-module.exports = { createAdminDirectoryClient, loadGoogleServiceAccountCredentials };
+module.exports = { createAdminDirectoryClient, loadGoogleServiceAccountCredentials, createGoogleJwtClient };
 
 
