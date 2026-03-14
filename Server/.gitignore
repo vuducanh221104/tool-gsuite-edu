@@ -1,7 +1,33 @@
-node_modules
+node_modules/
+
+# Local environment files
 .env
+.env.*
+!.env.example
+
+# Logs
 npm-debug.log*
+yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS / Editor
 .DS_Store
+Thumbs.db
+
+# Local package manager cache
+.npm-cache/
+
+# Google service account and other private keys
+*.pem
+*.key
+*.p12
+src/services/*.json
+!src/services/*.example.json
+
+# Runtime generated data
+data/*.json
+src/data/*.json
 
 

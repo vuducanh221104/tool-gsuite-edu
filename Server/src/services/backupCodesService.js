@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
-const { createAdminDirectoryClient } = require('../lib/googleAuth');
+const { createAdminDirectoryClient, loadGoogleServiceAccountCredentials } = require('../lib/googleAuth');
 
 /**
  * Helper function to get access token
@@ -9,23 +9,7 @@ const { createAdminDirectoryClient } = require('../lib/googleAuth');
  */
 async function getAccessToken() {
   try {
-    let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-    let privateKeyRaw = process.env.GOOGLE_PRIVATE_KEY;
-
-    console.log('Debug - clientEmail:', clientEmail);
-    console.log('Debug - privateKeyRaw:', privateKeyRaw ? 'exists' : 'undefined');
-    console.log('Debug - GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-
-    // Support GOOGLE_APPLICATION_CREDENTIALS to load from JSON file
-    if ((!clientEmail || !privateKeyRaw) && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      const credentialsPath = path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-      console.log('Debug - credentialsPath:', credentialsPath);
-      const json = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-      clientEmail = clientEmail || json.client_email;
-      privateKeyRaw = privateKeyRaw || json.private_key;
-      console.log('Debug - loaded clientEmail:', clientEmail);
-      console.log('Debug - loaded privateKeyRaw:', privateKeyRaw ? 'exists' : 'undefined');
-    }
+    const { clientEmail, privateKeyRaw } = loadGoogleServiceAccountCredentials();
 
     if (!privateKeyRaw) {
       throw new Error('No private key found');

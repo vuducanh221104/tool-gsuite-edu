@@ -2,21 +2,49 @@ const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 
+function resolveCredentialsPath(credentialsPath) {
+  if (!credentialsPath) return null;
+
+  const candidates = [
+    path.resolve(credentialsPath),
+    path.resolve(process.cwd(), credentialsPath),
+    path.resolve(__dirname, '..', credentialsPath),
+    path.resolve(__dirname, '..', 'services', credentialsPath),
+    path.resolve(__dirname, '..', '..', credentialsPath),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  const err = new Error(
+    `Cannot find credentials file from GOOGLE_APPLICATION_CREDENTIALS='${credentialsPath}'`
+  );
+  err.code = 'ENOENT';
+  err.pathsTried = candidates;
+  throw err;
+}
+
+function loadGoogleServiceAccountCredentials() {
+  let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+  let privateKeyRaw = process.env.GOOGLE_PRIVATE_KEY;
+
+  if ((!clientEmail || !privateKeyRaw) && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    const resolvedPath = resolveCredentialsPath(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    const json = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
+    clientEmail = clientEmail || json.client_email;
+    privateKeyRaw = privateKeyRaw || json.private_key;
+  }
+
+  return { clientEmail, privateKeyRaw };
+}
+
 /**
  * Create an authorized Google Admin SDK client using a Service Account
  * with Domain-Wide Delegation to impersonate a Workspace admin user.
  */
 function createAdminDirectoryClient() {
-  let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  let privateKeyRaw = process.env.GOOGLE_PRIVATE_KEY;
-
-  // Support GOOGLE_APPLICATION_CREDENTIALS to load from JSON file
-  if ((!clientEmail || !privateKeyRaw) && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    const credentialsPath = path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-    const json = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-    clientEmail = clientEmail || json.client_email;
-    privateKeyRaw = privateKeyRaw || json.private_key;
-  }
+  const { clientEmail, privateKeyRaw } = loadGoogleServiceAccountCredentials();
 
   const requiredNow = [
     ['GOOGLE_CLIENT_EMAIL', clientEmail],
@@ -51,6 +79,6 @@ function createAdminDirectoryClient() {
   return admin;
 }
 
-module.exports = { createAdminDirectoryClient };
+module.exports = { createAdminDirectoryClient, loadGoogleServiceAccountCredentials };
 
 
