@@ -17,6 +17,17 @@ function extractCodes(items: Array<{ code?: string; verificationCode?: string }>
     .filter(Boolean);
 }
 
+function parseUserTargets(rawInput: string) {
+  return Array.from(
+    new Set(
+      rawInput
+        .split(/[\n,;]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 export function useBackupCodes() {
   const [savedCodes, setSavedCodes] = useState<SavedBackupCodesMap>({});
   const [loading, setLoading] = useState(false);
@@ -62,11 +73,43 @@ export function useBackupCodes() {
   }, []);
 
   const loadLiveCodes = useCallback(async (userKey: string) => {
-    const normalizedUser = userKey.trim();
-    if (!normalizedUser) {
+    const targets = parseUserTargets(userKey);
+    if (targets.length === 0) {
       toast.error('Please enter user email');
       return;
     }
+
+    if (targets.length > 1) {
+      setActionLoading(true);
+      const toastId = toast.loading(`Loading active codes for ${targets.length} users...`);
+
+      try {
+        const results = await Promise.allSettled(targets.map((target) => listVerificationCodes(target)));
+        const successCount = results.filter((item) => item.status === 'fulfilled').length;
+
+        setActiveUser(`${successCount}/${targets.length} users loaded`);
+        setActiveCodes([]);
+        setSecurityStatus(null);
+
+        toast.dismiss(toastId);
+        if (successCount > 0) {
+          toast.success(`Loaded active backup codes for ${successCount}/${targets.length} users.`);
+        } else {
+          toast.error('No user loaded successfully.');
+        }
+
+        await fetchSavedCodes();
+      } catch (error) {
+        toast.dismiss(toastId);
+        toast.error(parseApiError(error) || 'Failed to load active backup codes');
+      } finally {
+        setActionLoading(false);
+      }
+
+      return;
+    }
+
+    const normalizedUser = targets[0];
 
     setActionLoading(true);
     const toastId = toast.loading(`Loading active codes for ${normalizedUser}...`);
@@ -89,11 +132,42 @@ export function useBackupCodes() {
   }, [fetchSavedCodes, loadUserStatus]);
 
   const generateCodes = useCallback(async (userKey: string) => {
-    const normalizedUser = userKey.trim();
-    if (!normalizedUser) {
+    const targets = parseUserTargets(userKey);
+    if (targets.length === 0) {
       toast.error('Please enter user email');
       return;
     }
+
+    if (targets.length > 1) {
+      setActionLoading(true);
+      const toastId = toast.loading(`Generating new codes for ${targets.length} users...`);
+
+      try {
+        const results = await Promise.allSettled(targets.map((target) => generateVerificationCodes(target)));
+        const successCount = results.filter((item) => item.status === 'fulfilled').length;
+
+        toast.dismiss(toastId);
+        if (successCount > 0) {
+          toast.success(`Generated new codes for ${successCount}/${targets.length} users.`);
+        } else {
+          toast.error('No user generated successfully.');
+        }
+
+        setActiveUser(`${successCount}/${targets.length} users generated`);
+        setActiveCodes([]);
+        setSecurityStatus(null);
+        await fetchSavedCodes();
+      } catch (error) {
+        toast.dismiss(toastId);
+        toast.error(parseApiError(error) || 'Failed to generate backup codes');
+      } finally {
+        setActionLoading(false);
+      }
+
+      return;
+    }
+
+    const normalizedUser = targets[0];
 
     setActionLoading(true);
     const toastId = toast.loading(`Generating new codes for ${normalizedUser}...`);
@@ -109,14 +183,46 @@ export function useBackupCodes() {
     } finally {
       setActionLoading(false);
     }
-  }, [loadLiveCodes]);
+  }, [fetchSavedCodes, loadLiveCodes]);
 
   const invalidateCodes = useCallback(async (userKey: string) => {
-    const normalizedUser = userKey.trim();
-    if (!normalizedUser) {
+    const targets = parseUserTargets(userKey);
+    if (targets.length === 0) {
       toast.error('Please enter user email');
       return;
     }
+
+    if (targets.length > 1) {
+      setActionLoading(true);
+      const toastId = toast.loading(`Invalidating codes for ${targets.length} users...`);
+
+      try {
+        const results = await Promise.allSettled(targets.map((target) => invalidateVerificationCodes(target)));
+        const successCount = results.filter((item) => item.status === 'fulfilled').length;
+
+        setActiveCodes([]);
+        setSecurityStatus(null);
+        setActiveUser(`${successCount}/${targets.length} users invalidated`);
+
+        toast.dismiss(toastId);
+        if (successCount > 0) {
+          toast.success(`Invalidated backup codes for ${successCount}/${targets.length} users.`);
+        } else {
+          toast.error('No user invalidated successfully.');
+        }
+
+        await fetchSavedCodes();
+      } catch (error) {
+        toast.dismiss(toastId);
+        toast.error(parseApiError(error) || 'Failed to invalidate backup codes');
+      } finally {
+        setActionLoading(false);
+      }
+
+      return;
+    }
+
+    const normalizedUser = targets[0];
 
     setActionLoading(true);
     const toastId = toast.loading(`Invalidating codes for ${normalizedUser}...`);

@@ -6,12 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@Client/components/ui/
 import { Input } from '@Client/components/ui/input';
 import { Badge } from '@Client/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@Client/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@Client/components/ui/dropdown-menu';
 import { Sidebar } from '@Client/components/dashboard/Sidebar';
 import { MetricCard } from '@Client/components/dashboard/MetricCard';
 import { ModeToggle } from '@Client/components/theme/ModeToggle';
 import { BackupCodesTable } from '@Client/components/backup-codes/BackupCodesTable';
 import { useBackupCodes } from '@Client/hooks/useBackupCodes';
-import { RefreshCw, KeyRound, RotateCcw, Ban, Copy } from 'lucide-react';
+import { RefreshCw, KeyRound, RotateCcw, Ban, Copy, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function BackupCodesPage() {
@@ -33,6 +41,8 @@ export default function BackupCodesPage() {
 
   const [search, setSearch] = React.useState('');
   const [userKey, setUserKey] = React.useState('');
+  const [bulkSearch, setBulkSearch] = React.useState('');
+  const [selectedBulkEmails, setSelectedBulkEmails] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     fetchSavedCodes();
@@ -49,6 +59,40 @@ export default function BackupCodesPage() {
 
     return rows.filter((row) => row.email.toLowerCase().includes(keyword));
   }, [savedCodes, search]);
+
+  const filteredBulkEmails = React.useMemo(() => {
+    const keyword = bulkSearch.trim().toLowerCase();
+    if (!keyword) {
+      return availableEmails;
+    }
+    return availableEmails.filter((email) => email.toLowerCase().includes(keyword));
+  }, [availableEmails, bulkSearch]);
+
+  const toggleBulkEmail = (email: string) => {
+    setSelectedBulkEmails((previous) => {
+      if (previous.includes(email)) {
+        return previous.filter((item) => item !== email);
+      }
+      return [...previous, email];
+    });
+  };
+
+  const selectAllBulk = () => {
+    setSelectedBulkEmails(filteredBulkEmails);
+  };
+
+  const clearBulk = () => {
+    setSelectedBulkEmails([]);
+  };
+
+  const applyBulkToInput = () => {
+    if (selectedBulkEmails.length === 0) {
+      toast.error('No users selected in bulk list');
+      return;
+    }
+    setUserKey(selectedBulkEmails.join(', '));
+    toast.success(`Applied ${selectedBulkEmails.length} users to input`);
+  };
 
   const copyCodes = async () => {
     if (!activeCodes.length) {
@@ -148,6 +192,58 @@ export default function BackupCodesPage() {
                 <Ban className="w-4 h-4" />
                 Invalidate All
               </Button>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="inline-flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    {selectedBulkEmails.length > 0 ? `Bulk selected: ${selectedBulkEmails.length}` : 'Bulk select users'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80">
+                  <DropdownMenuLabel>Select users for bulk action</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 pb-2">
+                    <Input
+                      value={bulkSearch}
+                      onChange={(event) => setBulkSearch(event.target.value)}
+                      placeholder="Search user email"
+                    />
+                  </div>
+                  <div className="px-2 py-1 flex items-center gap-2">
+                    <Button type="button" size="sm" variant="outline" onClick={selectAllBulk}>
+                      Select all visible
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={clearBulk}>
+                      Clear
+                    </Button>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="max-h-64 overflow-y-auto">
+                    {filteredBulkEmails.length === 0 ? (
+                      <div className="px-2 py-3 text-xs text-muted-foreground">No users matched your search.</div>
+                    ) : null}
+                    {filteredBulkEmails.map((email) => (
+                      <DropdownMenuCheckboxItem
+                        key={email}
+                        checked={selectedBulkEmails.includes(email)}
+                        onCheckedChange={() => toggleBulkEmail(email)}
+                      >
+                        {email}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button variant="outline" onClick={applyBulkToInput} disabled={selectedBulkEmails.length === 0}>
+                Apply selected to input
+              </Button>
+              <div className="text-xs text-muted-foreground">
+                Tip: after applying, the action buttons will run for all selected users.
+              </div>
             </div>
 
             <div className="rounded-md border p-4 space-y-3">
