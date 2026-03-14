@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@Client/compon
 import { Button } from '@Client/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@Client/components/ui/tabs';
 import { Upload, FileSpreadsheet } from 'lucide-react';
-import { message } from 'antd';
+import { toast } from 'sonner';
 
 type Props = {
   open: boolean;
@@ -18,7 +18,7 @@ export function BulkImportDialog({ open, onOpenChange, onImport }: Props) {
 
   const handleCSVParse = () => {
     if (!csvText.trim()) {
-      message.error('Please enter CSV data');
+      toast.error('Please enter CSV data');
       return;
     }
 
@@ -31,7 +31,7 @@ export function BulkImportDialog({ open, onOpenChange, onImport }: Props) {
       const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
       
       if (missingHeaders.length > 0) {
-        message.error(`Missing required columns: ${missingHeaders.join(', ')}`);
+        toast.error(`Missing required columns: ${missingHeaders.join(', ')}`);
         return;
       }
 
@@ -48,13 +48,13 @@ export function BulkImportDialog({ open, onOpenChange, onImport }: Props) {
       }
 
       if (users.length === 0) {
-        message.error('No valid user data found');
+        toast.error('No valid user data found');
         return;
       }
 
       handleImport(users);
     } catch (error) {
-      message.error('Failed to parse CSV: ' + (error as Error).message);
+      toast.error('Failed to parse CSV: ' + (error as Error).message);
     }
   };
 

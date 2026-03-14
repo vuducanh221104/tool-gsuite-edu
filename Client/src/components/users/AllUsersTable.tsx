@@ -3,12 +3,22 @@ import React from 'react';
 import { Checkbox } from '@Client/components/ui/checkbox';
 import { Badge } from '@Client/components/ui/badge';
 import { Button } from '@Client/components/ui/button';
-import { Table as STable } from '@Client/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@Client/components/ui/table';
 import type { DirectoryUser } from '@Client/types/users';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@Client/components/ui/dropdown-menu';
 import { DropdownMenuItem } from '@Client/components/ui/dropdown-menu';
 import { Skeleton } from '@Client/components/ui/skeleton';
 import { MoreVertical, CheckCircle2, XCircle, Shield, User } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@Client/components/ui/alert-dialog"
 
 type Props = {
   users: DirectoryUser[];
@@ -21,6 +31,7 @@ type Props = {
 
 export function AllUsersTable({ users, loading, onDelete, onEdit, selectedUsers = [], onSelectionChange }: Props) {
   const [selected, setSelected] = React.useState<string[]>(selectedUsers);
+  const [userToDelete, setUserToDelete] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setSelected(selectedUsers);
@@ -54,67 +65,67 @@ export function AllUsersTable({ users, loading, onDelete, onEdit, selectedUsers 
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border shadow-sm">
-        <STable>
-          <thead className="sticky top-0 z-10 bg-background">
-            <tr>
-              <th className="w-8">
+      <div className="overflow-x-auto rounded-lg shadow-sm border overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead className="w-12">
                 <Checkbox 
                   checked={selected.length > 0 && selected.length === users.length} 
                   onCheckedChange={toggleAll} 
                 />
-              </th>
-              <th className="text-left">Email</th>
-              <th className="text-left">Name</th>
-              <th className="text-left">Org Unit</th>
-              <th className="text-left">Role</th>
-              <th className="text-left">Status</th>
-              <th className="text-left">Created</th>
-              <th className="w-10"></th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Org Unit</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i}>
-                  <td><Skeleton className="h-4 w-4" /></td>
-                  <td><Skeleton className="h-4 w-[220px]" /></td>
-                  <td><Skeleton className="h-4 w-[180px]" /></td>
-                  <td><Skeleton className="h-4 w-[100px]" /></td>
-                  <td><Skeleton className="h-4 w-[80px]" /></td>
-                  <td><Skeleton className="h-4 w-[80px]" /></td>
-                  <td><Skeleton className="h-4 w-[120px]" /></td>
-                  <td className="text-right pr-3"><Skeleton className="h-4 w-4 ml-auto" /></td>
-                </tr>
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[220px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[180px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-4 w-4 ml-auto" /></TableCell>
+                </TableRow>
               ))
             ) : users.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
                   No users found
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               users.map((u) => (
-                <tr key={u.id ?? u.primaryEmail} className="hover:bg-muted/40">
-                  <td>
+                <TableRow key={u.id ?? u.primaryEmail}>
+                  <TableCell>
                     <Checkbox 
                       checked={selected.includes(u.primaryEmail)} 
                       onCheckedChange={(v) => toggleOne(u.primaryEmail, v)} 
                     />
-                  </td>
-                  <td className="font-mono text-sm">{u.primaryEmail}</td>
-                  <td>
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">{u.primaryEmail}</TableCell>
+                  <TableCell>
                     {u.name?.givenName || u.name?.familyName 
                       ? `${u.name?.givenName ?? ''} ${u.name?.familyName ?? ''}`.trim()
                       : '—'
                     }
-                  </td>
-                  <td>
-                    <span className="text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground">
                       {u.orgUnitPath || '/'}
                     </span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {u.isAdmin ? (
                       <Badge variant="default" className="inline-flex items-center gap-1">
                         <Shield className="h-3 w-3" /> Admin
@@ -124,24 +135,24 @@ export function AllUsersTable({ users, loading, onDelete, onEdit, selectedUsers 
                         <User className="h-3 w-3" /> User
                       </Badge>
                     )}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {u.suspended ? (
                       <Badge variant="destructive" className="inline-flex items-center gap-1">
                         <XCircle className="h-3 w-3" /> Suspended
                       </Badge>
                     ) : (
-                      <Badge variant="default" className="inline-flex items-center gap-1 bg-emerald-600">
+                      <Badge variant="default" className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700">
                         <CheckCircle2 className="h-3 w-3" /> Active
                       </Badge>
                     )}
-                  </td>
-                  <td>
-                    <span className="text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground">
                       {u.creationTime ? new Date(u.creationTime).toLocaleDateString() : '—'}
                     </span>
-                  </td>
-                  <td className="text-right pr-3">
+                  </TableCell>
+                  <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -161,23 +172,19 @@ export function AllUsersTable({ users, loading, onDelete, onEdit, selectedUsers 
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
-                          className="text-destructive" 
-                          onClick={() => {
-                            if (window.confirm(`Are you sure you want to delete user "${u.primaryEmail}"?\n\nThis action cannot be undone!`)) {
-                              onDelete?.(u.primaryEmail);
-                            }
-                          }}
+                          className="text-destructive focus:bg-destructive focus:text-destructive-foreground" 
+                          onClick={() => setUserToDelete(u.primaryEmail)}
                         >
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </STable>
+          </TableBody>
+        </Table>
       </div>
 
       <div className="flex items-center justify-between py-3 text-sm text-muted-foreground border-t bg-muted/30 px-4 rounded-b-lg">
@@ -188,6 +195,33 @@ export function AllUsersTable({ users, loading, onDelete, onEdit, selectedUsers 
           Total: {users.length} user{users.length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user{" "}
+              <span className="font-medium text-foreground">{userToDelete}</span>{" "}
+              from the Google Workspace directory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (userToDelete) {
+                  onDelete?.(userToDelete);
+                  setUserToDelete(null);
+                }
+              }}
+            >
+              Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

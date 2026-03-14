@@ -1,6 +1,5 @@
 "use client";
 import React from 'react';
-import { message } from 'antd';
 import { Button } from '@Client/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@Client/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@Client/components/ui/dialog';
@@ -12,74 +11,35 @@ import { ModeToggle } from '@Client/components/theme/ModeToggle';
 import { AllUsersTable } from '@Client/components/users/AllUsersTable';
 import { BulkImportDialog } from '@Client/components/users/BulkImportDialog';
 import { BulkImportResultDialog } from '@Client/components/users/BulkImportResultDialog';
-import { listUsers, createUser, deleteUser, bulkCreateUsers, exportUsersToExcel, type CreateUserPayload, type BulkCreateResult } from '@Client/services/users';
 import { UserForm } from '@Client/components/users/UserForm';
-
-import type { DirectoryUser } from '@Client/types/users';
+import { useUsers } from '@Client/hooks/useUsers';
 
 export default function Dashboard() {
-  const [users, setUsers] = React.useState<DirectoryUser[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [open, setOpen] = React.useState(false);
-  const [bulkOpen, setBulkOpen] = React.useState(false);
-  const [resultOpen, setResultOpen] = React.useState(false);
-  const [bulkResults, setBulkResults] = React.useState<BulkCreateResult[]>([]);
-  const [selectedUsers, setSelectedUsers] = React.useState<string[]>([]);
-  const [editingUser, setEditingUser] = React.useState<DirectoryUser | null>(null);
-  const [exporting, setExporting] = React.useState(false);
-
-  const fetchUsers = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const { users } = await listUsers({ maxResults: 500 });
-      setUsers(users || []);
-    } catch (e) {
-      const err = e as { response?: { data?: { error?: string } } };
-      message.error(err?.response?.data?.error || 'Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    users,
+    loading,
+    exporting,
+    selectedUsers,
+    setSelectedUsers,
+    open,
+    setOpen,
+    bulkOpen,
+    setBulkOpen,
+    resultOpen,
+    setResultOpen,
+    bulkResults,
+    editingUser,
+    setEditingUser,
+    fetchUsers,
+    handleBulkImport,
+    handleExport,
+    handleDeleteUser,
+    handleCreateOrUpdateUser
+  } = useUsers();
 
   React.useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-
-  const handleBulkImport = async (usersData: Record<string, unknown>[]) => {
-    try {
-      message.loading({ content: 'Creating users...', key: 'bulk-import', duration: 0 });
-      const { results } = await bulkCreateUsers(usersData as CreateUserPayload[]);
-      message.destroy('bulk-import');
-      
-      setBulkResults(results);
-      setResultOpen(true);
-      
-      const successCount = results.filter((r) => r.success).length;
-      message.success(`${successCount} of ${results.length} users created successfully`);
-      
-      fetchUsers();
-    } catch (e) {
-      message.destroy('bulk-import');
-      const err = e as { response?: { data?: { error?: string } } };
-      message.error(err?.response?.data?.error || 'Bulk import failed');
-    }
-  };
-
-  const handleExport = async () => {
-    try {
-      setExporting(true);
-      message.loading({ content: 'Generating Excel file...', key: 'export', duration: 0 });
-      await exportUsersToExcel('google');
-      message.destroy('export');
-      message.success('Users exported successfully');
-    } catch (e) {
-      message.destroy('export');
-      const err = e as { response?: { data?: { error?: string } } };
-      message.error(err?.response?.data?.error || 'Export failed');
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const activeUsers = users.filter(u => !u.suspended).length;
   const suspendedUsers = users.filter(u => u.suspended).length;
@@ -171,20 +131,7 @@ export default function Dashboard() {
               loading={loading}
               selectedUsers={selectedUsers}
               onSelectionChange={setSelectedUsers}
-              onDelete={async (email) => {
-                try {
-                  message.loading({ content: 'Deleting user...', key: 'delete-user', duration: 0 });
-                  await deleteUser(email);
-                  message.destroy('delete-user');
-                  message.success(`User ${email} deleted successfully`);
-                  fetchUsers();
-                } catch (e) {
-                  message.destroy('delete-user');
-                  const err = e as { response?: { data?: { error?: string } } };
-                  message.error(err?.response?.data?.error || 'Failed to delete user. Please try again.');
-                  console.error('Delete error:', e);
-                }
-              }}
+              onDelete={handleDeleteUser}
               onEdit={(user) => {
                 setEditingUser(user);
                 setOpen(true);
@@ -207,23 +154,7 @@ export default function Dashboard() {
                   email: editingUser.primaryEmail,
                   password: ''
                 } : undefined}
-                onSubmit={async (values) => {
-                  try {
-                    if (editingUser) {
-                      // TODO: Implement update
-                      message.info('Edit functionality coming soon');
-                    } else {
-                      await createUser(values);
-                      message.success('User created successfully');
-                    }
-                    setOpen(false);
-                    setEditingUser(null);
-                    fetchUsers();
-                  } catch (e) {
-                    const err = e as { response?: { data?: { error?: string } } };
-                    message.error(err?.response?.data?.error || 'Operation failed');
-                  }
-                }}
+                onSubmit={handleCreateOrUpdateUser}
                 submitText={editingUser ? 'Update' : 'Create'}
               />
             </div>

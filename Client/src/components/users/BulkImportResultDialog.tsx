@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@Client/compon
 import { Button } from '@Client/components/ui/button';
 import { Badge } from '@Client/components/ui/badge';
 import { CheckCircle2, XCircle, Download, Copy } from 'lucide-react';
-import { message } from 'antd';
+import { toast } from 'sonner';
 import type { BulkCreateResult } from '@Client/services/users';
 
 type Props = {
@@ -20,7 +20,7 @@ export function BulkImportResultDialog({ open, onOpenChange, results }: Props) {
   const exportToCSV = () => {
     const successful = results.filter(r => r.success);
     if (successful.length === 0) {
-      message.error('No successful users to export');
+      toast.error('No successful users to export');
       return;
     }
 
@@ -43,7 +43,7 @@ export function BulkImportResultDialog({ open, onOpenChange, results }: Props) {
     a.download = `bulk-import-results-${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    message.success('Results exported');
+    toast.success('Results exported');
   };
 
   const copyAllCredentials = () => {
@@ -53,7 +53,7 @@ export function BulkImportResultDialog({ open, onOpenChange, results }: Props) {
     ).join('\n---\n\n');
     
     navigator.clipboard.writeText(text);
-    message.success('All credentials copied to clipboard');
+    toast.success('All credentials copied to clipboard');
   };
 
   return (
@@ -134,7 +134,7 @@ export function BulkImportResultDialog({ open, onOpenChange, results }: Props) {
                             className="h-7 w-7 shrink-0"
                             onClick={() => {
                               navigator.clipboard.writeText(result.password || '');
-                              message.success('Password copied');
+                              toast.success('Password copied');
                             }}
                           >
                             <Copy className="h-3.5 w-3.5" />
@@ -158,7 +158,7 @@ export function BulkImportResultDialog({ open, onOpenChange, results }: Props) {
                               className="h-7 w-7 shrink-0"
                               onClick={() => {
                                 navigator.clipboard.writeText(result.backupCodes?.join(', ') || '');
-                                message.success('Backup codes copied');
+                                toast.success('Backup codes copied');
                               }}
                             >
                               <Copy className="h-3.5 w-3.5" />
